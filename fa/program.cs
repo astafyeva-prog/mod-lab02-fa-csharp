@@ -32,45 +32,50 @@ namespace fans
     // ДКА для строки, содержащей ровно один '0' и хотя бы одну '1'
     public class FA1 : FA
     {
-        private static State S0 = new State() { Name = "S0", IsAcceptState = false, Transitions = new Dictionary<char, State>() };
-        private static State S1 = new State() { Name = "S1", IsAcceptState = false, Transitions = new Dictionary<char, State>() };
-        private static State S2 = new State() { Name = "S2", IsAcceptState = true, Transitions = new Dictionary<char, State>() };
-        private static State S3 = new State() { Name = "S3", IsAcceptState = false, Transitions = new Dictionary<char, State>() };
+        // Состояния:
+        // A: начальное, еще не видели 0 и не видели 1
+        // B: видели один 0, но еще не видели 1
+        // C: видели один 0 и хотя бы одну 1 (принимающее)
+        // D: видели больше одного 0 (отвергающее)
+        
+        private static State A = new State() { Name = "A", IsAcceptState = false, Transitions = new Dictionary<char, State>() };
+        private static State B = new State() { Name = "B", IsAcceptState = false, Transitions = new Dictionary<char, State>() };
+        private static State C = new State() { Name = "C", IsAcceptState = true, Transitions = new Dictionary<char, State>() };
+        private static State D = new State() { Name = "D", IsAcceptState = false, Transitions = new Dictionary<char, State>() };
         
         public FA1()
         {
-            // S0: начальное, еще не видели 0
-            S0.Transitions['0'] = S1;  // встретили первый 0
-            S0.Transitions['1'] = S0;  // продолжаем ждать 0
+            // Из состояния A (начальное)
+            A.Transitions['0'] = B;  // встретили первый 0 -> идем в B
+            A.Transitions['1'] = A;  // 1 не меняет состояние, ждем 0
             
-            // S1: видели один 0, еще не видели 1
-            S1.Transitions['0'] = S3;  // второй 0 - ошибка
-            S1.Transitions['1'] = S2;  // встретили 1 - успех
+            // Из состояния B (один 0, еще нет 1)
+            B.Transitions['0'] = D;  // второй 0 -> ошибка
+            B.Transitions['1'] = C;  // встретили 1 -> успех (есть и 0, и 1)
             
-            // S2: видели один 0 и хотя бы одну 1 (принимающее)
-            S2.Transitions['0'] = S3;  // второй 0 - ошибка
-            S2.Transitions['1'] = S2;  // можно сколько угодно 1
+            // Из состояния C (успех: один 0 и хотя бы одна 1)
+            C.Transitions['0'] = D;  // второй 0 -> ошибка
+            C.Transitions['1'] = C;  // можно добавлять сколько угодно 1
             
-            // S3: ошибка (больше одного 0)
-            S3.Transitions['0'] = S3;
-            S3.Transitions['1'] = S3;
+            // Из состояния D (ошибка)
+            D.Transitions['0'] = D;
+            D.Transitions['1'] = D;
             
-            InitialState = S0;
+            InitialState = A;
         }
     }
 
-    // ДКА для строки, содержащей нечетное количество '0' И нечетное количество '1'
+    // ДКА для строки, содержащей нечетное количество '0' и нечетное количество '1'
     public class FA2 : FA
     {
         // Состояния: (четность_0, четность_1)
-        private static State S00 = new State() { Name = "S00", IsAcceptState = false, Transitions = new Dictionary<char, State>() }; // чет, чет
-        private static State S01 = new State() { Name = "S01", IsAcceptState = false, Transitions = new Dictionary<char, State>() }; // чет, нечет
-        private static State S10 = new State() { Name = "S10", IsAcceptState = false, Transitions = new Dictionary<char, State>() }; // нечет, чет
-        private static State S11 = new State() { Name = "S11", IsAcceptState = true, Transitions = new Dictionary<char, State>() };  // нечет, нечет
+        private static State S00 = new State() { Name = "S00", IsAcceptState = false, Transitions = new Dictionary<char, State>() };
+        private static State S01 = new State() { Name = "S01", IsAcceptState = false, Transitions = new Dictionary<char, State>() };
+        private static State S10 = new State() { Name = "S10", IsAcceptState = false, Transitions = new Dictionary<char, State>() };
+        private static State S11 = new State() { Name = "S11", IsAcceptState = true, Transitions = new Dictionary<char, State>() };
         
         public FA2()
         {
-            // Из каждого состояния по символу 0 меняется четность нулей
             S00.Transitions['0'] = S10;
             S00.Transitions['1'] = S01;
             
@@ -131,6 +136,21 @@ namespace fans
             {
                 bool? result = fa1.Run(test);
                 Console.WriteLine($"\"{test}\" -> {result}");
+                // Отладочная информация
+                if (test == "10")
+                {
+                    Console.WriteLine($"  Trace for \"10\":");
+                    State current = fa1.GetType().GetField("A", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)?.GetValue(null) as State;
+                    Console.WriteLine($"    Start: A");
+                    foreach (char c in test)
+                    {
+                        if (current != null && current.Transitions.ContainsKey(c))
+                        {
+                            current = current.Transitions[c];
+                            Console.WriteLine($"    '{c}' -> {current.Name}");
+                        }
+                    }
+                }
             }
         }
         
