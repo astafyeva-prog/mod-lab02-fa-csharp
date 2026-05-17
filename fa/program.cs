@@ -7,15 +7,15 @@ namespace fans
     // Базовый класс для состояния
     public class State
     {
-        public string Name;
-        public Dictionary<char, State> Transitions;
+        public string Name = "";
+        public Dictionary<char, State> Transitions = new Dictionary<char, State>();
         public bool IsAcceptState;
     }
 
     // Базовый класс для автомата
     public abstract class FA
     {
-        protected State InitialState;
+        protected State InitialState = null!;
         
         public bool? Run(IEnumerable<char> s)
         {
@@ -34,58 +34,58 @@ namespace fans
     public class FA1 : FA
     {
         // Состояния:
-        // q0 - начальное: 0 еще не встречали, 1 еще не встречали
-        // q1 - встретили 0, 1 еще не встречали
-        // q2 - встретили 0 и хотя бы одну 1 (принимающее)
-        // q3 - встретили больше одного 0 (отвергающее)
+        // S0 - начальное: 0 еще не встречали, 1 еще не встречали
+        // S1 - встретили 0, 1 еще не встречали
+        // S2 - встретили 0 и хотя бы одну 1 (принимающее)
+        // S3 - встретили больше одного 0 (отвергающее)
         
-        private static State q0 = new State()
+        private static State S0 = new State()
         {
-            Name = "q0",
+            Name = "S0",
             IsAcceptState = false,
             Transitions = new Dictionary<char, State>()
         };
         
-        private static State q1 = new State()
+        private static State S1 = new State()
         {
-            Name = "q1",
+            Name = "S1",
             IsAcceptState = false,
             Transitions = new Dictionary<char, State>()
         };
         
-        private static State q2 = new State()
+        private static State S2 = new State()
         {
-            Name = "q2",
+            Name = "S2",
             IsAcceptState = true,
             Transitions = new Dictionary<char, State>()
         };
         
-        private static State q3 = new State()
+        private static State S3 = new State()
         {
-            Name = "q3",
+            Name = "S3",
             IsAcceptState = false,
             Transitions = new Dictionary<char, State>()
         };
         
         public FA1()
         {
-            // q0: 0 -> q1, 1 -> q0
-            q0.Transitions['0'] = q1;
-            q0.Transitions['1'] = q0;
+            // S0: 0 -> S1, 1 -> S0
+            S0.Transitions['0'] = S1;
+            S0.Transitions['1'] = S0;
             
-            // q1: 0 -> q3, 1 -> q2
-            q1.Transitions['0'] = q3;
-            q1.Transitions['1'] = q2;
+            // S1: 0 -> S3, 1 -> S2
+            S1.Transitions['0'] = S3;
+            S1.Transitions['1'] = S2;
             
-            // q2: 0 -> q3, 1 -> q2
-            q2.Transitions['0'] = q3;
-            q2.Transitions['1'] = q2;
+            // S2: 0 -> S3, 1 -> S2
+            S2.Transitions['0'] = S3;
+            S2.Transitions['1'] = S2;
             
-            // q3: 0 -> q3, 1 -> q3 (ловушка)
-            q3.Transitions['0'] = q3;
-            q3.Transitions['1'] = q3;
+            // S3: 0 -> S3, 1 -> S3
+            S3.Transitions['0'] = S3;
+            S3.Transitions['1'] = S3;
             
-            InitialState = q0;
+            InitialState = S0;
         }
     }
 
@@ -93,58 +93,58 @@ namespace fans
     public class FA2 : FA
     {
         // Состояния: (четность нулей, четность единиц)
-        // (0,0) - q00: четное 0, четное 1
-        // (0,1) - q01: четное 0, нечетное 1
-        // (1,0) - q10: нечетное 0, четное 1
-        // (1,1) - q11: нечетное 0, нечетное 1 (принимающее)
+        // (0,0) - четное 0, четное 1
+        // (0,1) - четное 0, нечетное 1
+        // (1,0) - нечетное 0, четное 1
+        // (1,1) - нечетное 0, нечетное 1 (принимающее)
         
-        private static State q00 = new State()
+        private static State S00 = new State()
         {
-            Name = "q00",
+            Name = "S00",
             IsAcceptState = false,
             Transitions = new Dictionary<char, State>()
         };
         
-        private static State q01 = new State()
+        private static State S01 = new State()
         {
-            Name = "q01",
+            Name = "S01",
             IsAcceptState = false,
             Transitions = new Dictionary<char, State>()
         };
         
-        private static State q10 = new State()
+        private static State S10 = new State()
         {
-            Name = "q10",
+            Name = "S10",
             IsAcceptState = false,
             Transitions = new Dictionary<char, State>()
         };
         
-        private static State q11 = new State()
+        private static State S11 = new State()
         {
-            Name = "q11",
+            Name = "S11",
             IsAcceptState = true,
             Transitions = new Dictionary<char, State>()
         };
         
         public FA2()
         {
-            // q00: 0 -> q10, 1 -> q01
-            q00.Transitions['0'] = q10;
-            q00.Transitions['1'] = q01;
+            // S00: 0 -> S10, 1 -> S01
+            S00.Transitions['0'] = S10;
+            S00.Transitions['1'] = S01;
             
-            // q01: 0 -> q11, 1 -> q00
-            q01.Transitions['0'] = q11;
-            q01.Transitions['1'] = q00;
+            // S01: 0 -> S11, 1 -> S00
+            S01.Transitions['0'] = S11;
+            S01.Transitions['1'] = S00;
             
-            // q10: 0 -> q00, 1 -> q11
-            q10.Transitions['0'] = q00;
-            q10.Transitions['1'] = q11;
+            // S10: 0 -> S00, 1 -> S11
+            S10.Transitions['0'] = S00;
+            S10.Transitions['1'] = S11;
             
-            // q11: 0 -> q01, 1 -> q10
-            q11.Transitions['0'] = q01;
-            q11.Transitions['1'] = q10;
+            // S11: 0 -> S01, 1 -> S10
+            S11.Transitions['0'] = S01;
+            S11.Transitions['1'] = S10;
             
-            InitialState = q00;
+            InitialState = S00;
         }
     }
 
@@ -152,46 +152,46 @@ namespace fans
     public class FA3 : FA
     {
         // Состояния:
-        // s0 - начальное: не встретили '1' или последний символ не '1'
-        // s1 - последний символ '1', но еще нет '11'
-        // s2 - найдено '11' (принимающее)
+        // Q0 - начальное: не встретили '1' или последний символ не '1'
+        // Q1 - последний символ '1', но еще нет '11'
+        // Q2 - найдено '11' (принимающее)
         
-        private static State s0 = new State()
+        private static State Q0 = new State()
         {
-            Name = "s0",
+            Name = "Q0",
             IsAcceptState = false,
             Transitions = new Dictionary<char, State>()
         };
         
-        private static State s1 = new State()
+        private static State Q1 = new State()
         {
-            Name = "s1",
+            Name = "Q1",
             IsAcceptState = false,
             Transitions = new Dictionary<char, State>()
         };
         
-        private static State s2 = new State()
+        private static State Q2 = new State()
         {
-            Name = "s2",
+            Name = "Q2",
             IsAcceptState = true,
             Transitions = new Dictionary<char, State>()
         };
         
         public FA3()
         {
-            // s0: 0 -> s0, 1 -> s1
-            s0.Transitions['0'] = s0;
-            s0.Transitions['1'] = s1;
+            // Q0: 0 -> Q0, 1 -> Q1
+            Q0.Transitions['0'] = Q0;
+            Q0.Transitions['1'] = Q1;
             
-            // s1: 0 -> s0, 1 -> s2
-            s1.Transitions['0'] = s0;
-            s1.Transitions['1'] = s2;
+            // Q1: 0 -> Q0, 1 -> Q2
+            Q1.Transitions['0'] = Q0;
+            Q1.Transitions['1'] = Q2;
             
-            // s2: 0 -> s2, 1 -> s2
-            s2.Transitions['0'] = s2;
-            s2.Transitions['1'] = s2;
+            // Q2: 0 -> Q2, 1 -> Q2
+            Q2.Transitions['0'] = Q2;
+            Q2.Transitions['1'] = Q2;
             
-            InitialState = s0;
+            InitialState = Q0;
         }
     }
 
