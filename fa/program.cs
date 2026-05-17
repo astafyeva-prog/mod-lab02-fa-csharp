@@ -33,33 +33,39 @@ namespace fans
     public class FA1 : FA
     {
         // Состояния:
-        // A: начальное, еще не видели 0 и не видели 1
-        // B: видели один 0, но еще не видели 1
-        // C: видели один 0 и хотя бы одну 1 (принимающее)
+        // A: начальное, ещё не видели 0 и не видели 1
+        // B: видели хотя бы одну 1, но ещё не видели 0
+        // C: видели ровно один 0 (и при этом уже была хотя бы одна 1) - ДОПУСКАЮЩЕЕ
         // D: видели больше одного 0 (отвергающее)
+        // E: видели один 0, но ещё не видели 1
         
         private static State A = new State() { Name = "A", IsAcceptState = false, Transitions = new Dictionary<char, State>() };
         private static State B = new State() { Name = "B", IsAcceptState = false, Transitions = new Dictionary<char, State>() };
         private static State C = new State() { Name = "C", IsAcceptState = true, Transitions = new Dictionary<char, State>() };
         private static State D = new State() { Name = "D", IsAcceptState = false, Transitions = new Dictionary<char, State>() };
+        private static State E = new State() { Name = "E", IsAcceptState = false, Transitions = new Dictionary<char, State>() };
         
         public FA1()
         {
             // Из состояния A (начальное)
-            A.Transitions['0'] = B;  // встретили первый 0 -> идем в B
-            A.Transitions['1'] = A;  // 1 не меняет состояние, ждем 0
+            A.Transitions['0'] = E;  // встретили первый 0, но ещё нет 1 -> идём в E
+            A.Transitions['1'] = B;  // встретили 1, ждём 0 -> идём в B
             
-            // Из состояния B (один 0, еще нет 1)
-            B.Transitions['0'] = D;  // второй 0 -> ошибка
-            B.Transitions['1'] = C;  // встретили 1 -> успех (есть и 0, и 1)
+            // Из состояния B (видели хотя бы одну 1, но ещё нет 0)
+            B.Transitions['0'] = C;  // встретили первый 0 -> успех (есть и 0, и 1)
+            B.Transitions['1'] = B;  // можно добавлять сколько угодно 1
             
-            // Из состояния C (успех: один 0 и хотя бы одна 1)
+            // Из состояния C (успех: один 0 и хотя бы одна 1) - ДОПУСКАЮЩЕЕ
             C.Transitions['0'] = D;  // второй 0 -> ошибка
             C.Transitions['1'] = C;  // можно добавлять сколько угодно 1
             
-            // Из состояния D (ошибка)
+            // Из состояния D (ошибка: два или более нулей)
             D.Transitions['0'] = D;
             D.Transitions['1'] = D;
+            
+            // Из состояния E (видели один 0, но ещё нет 1)
+            E.Transitions['0'] = D;  // второй 0 -> ошибка
+            E.Transitions['1'] = C;  // встретили 1 -> успех (есть и 0, и 1)
             
             InitialState = A;
         }
@@ -131,33 +137,18 @@ namespace fans
         static void TestFA1()
         {
             var fa1 = new FA1();
-            string[] tests = { "01", "10", "011", "101", "010", "001", "110", "1", "0", "1111101" };
+            string[] tests = { "01", "10", "011", "101", "1101", "1111101", "010", "001", "110", "1", "0", "" };
             foreach (var test in tests)
             {
                 bool? result = fa1.Run(test);
                 Console.WriteLine($"\"{test}\" -> {result}");
-                // Отладочная информация
-                if (test == "10")
-                {
-                    Console.WriteLine($"  Trace for \"10\":");
-                    State current = fa1.GetType().GetField("A", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)?.GetValue(null) as State;
-                    Console.WriteLine($"    Start: A");
-                    foreach (char c in test)
-                    {
-                        if (current != null && current.Transitions.ContainsKey(c))
-                        {
-                            current = current.Transitions[c];
-                            Console.WriteLine($"    '{c}' -> {current.Name}");
-                        }
-                    }
-                }
             }
         }
         
         static void TestFA2()
         {
             var fa2 = new FA2();
-            string[] tests = { "01", "10", "0011", "1100", "0001", "1110", "0", "1", "00", "11", "0101", "1010" };
+            string[] tests = { "01", "10", "000111", "111000", "0011", "1100", "011", "001", "110", "010", "0", "1", "" };
             foreach (var test in tests)
             {
                 bool? result = fa2.Run(test);
@@ -168,7 +159,7 @@ namespace fans
         static void TestFA3()
         {
             var fa3 = new FA3();
-            string[] tests = { "11", "011", "110", "1011", "101", "0110", "1", "0", "111" };
+            string[] tests = { "11", "011", "110", "1011", "111", "0110", "10110", "1", "0", "10", "01", "101", "010", "10101", "" };
             foreach (var test in tests)
             {
                 bool? result = fa3.Run(test);
